@@ -9,6 +9,8 @@ from torch.autograd import Variable
 import warnings
 warnings.filterwarnings("ignore")
 
+from tropical.TropicalMultiHeadAttention import TropicalMultiHeadAttention
+
 
 class Decoder(nn.Module):
     def __init__(self,
@@ -388,14 +390,26 @@ class MultiHeadAttentionLayer(nn.Sequential):
             embed_dim,
             feed_forward_hidden=512,
             normalization='batch',
+            attention_module_cls=None,
+            attention_module_kwargs=None,
     ):
+        if attention_module_cls is None:
+            attention_module_cls = MultiHeadAttention
+        if attention_module_kwargs is None:
+            attention_module_kwargs = {}
+        else:
+            attention_module_kwargs = dict(attention_module_kwargs)
+
+        attention_module = attention_module_cls(
+            n_heads,
+            input_dim=embed_dim,
+            embed_dim=embed_dim,
+            **attention_module_kwargs,
+        )
+
         super(MultiHeadAttentionLayer, self).__init__(
             SkipConnection(
-                MultiHeadAttention(
-                    n_heads,
-                    input_dim=embed_dim,
-                    embed_dim=embed_dim
-                ),
+                attention_module,
                 is_mask= True,
             ),
             Normalization(embed_dim, normalization),
@@ -418,15 +432,27 @@ class TransformerEncoder(nn.Module):
             n_layers,
             node_dim=None,
             normalization='batch',
-            feed_forward_hidden=512
+            feed_forward_hidden=512,
+            attention_module_cls=None,
+            attention_module_kwargs=None,
     ):
         super(TransformerEncoder, self).__init__()
 
         # To map input to embedding space
         self.init_embed = nn.Linear(node_dim, embed_dim) if node_dim is not None else None
 
+        if attention_module_cls is None:
+            attention_module_cls = MultiHeadAttention
+
         self.layers = nn.Sequential(*(
-            MultiHeadAttentionLayer(n_heads, embed_dim, feed_forward_hidden, normalization)
+            MultiHeadAttentionLayer(
+                n_heads,
+                embed_dim,
+                feed_forward_hidden,
+                normalization,
+                attention_module_cls=attention_module_cls,
+                attention_module_kwargs=attention_module_kwargs,
+            )
             for _ in range(n_layers)
         ))
 
@@ -458,10 +484,26 @@ class CPRoute(nn.Module):
         self.sort_x_size = args['sort_x_size']
         self.args = args
 
+        self.use_tropical_attention = bool(args.get('use_tropical_attention', False))
+        attention_module_cls = TropicalMultiHeadAttention if self.use_tropical_attention else MultiHeadAttention
+        attention_module_kwargs = None
+        if self.use_tropical_attention:
+            attention_module_kwargs = {}
+            base_kwargs = args.get('tropical_attention_kwargs', {}) or {}
+            if isinstance(base_kwargs, dict):
+                attention_module_kwargs.update(base_kwargs)
+            for key in ('tropical_proj', 'tropical_norm', 'symmetric', 'device'):
+                if key in args:
+                    attention_module_kwargs[key] = args[key]
+            if not attention_module_kwargs:
+                attention_module_kwargs = {}
+
         self.n_glimpses = 0
         self.sort_encoder = TransformerEncoder(node_dim=self.hidden_size, embed_dim=self.hidden_size,
                                                n_heads=8, n_layers=2,
-                                               normalization='batch')
+                                               normalization='batch',
+                                               attention_module_cls=attention_module_cls,
+                                               attention_module_kwargs=attention_module_kwargs)
 
         self.sort_x_embedding = nn.Linear(in_features=self.sort_x_size, out_features=self.hidden_size, bias=False)
         self.aoi_num = 6009 # max aoi num
