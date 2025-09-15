@@ -27,10 +27,37 @@ python data/dataset_pickup.py
 ```
 The constructed dataset will be stored in /data/dataset/. 
 
-3.2 model training  
+3.2 model training
 ```shell
 python run.py
 ```
+
+### Tropical CPRoute with tropical attention on HPC
+
+To run the CPRoute model variant that leverages the tropical multi-head attention
+module on a high-performance computing cluster, submit the batch script located
+at `scripts/tropical_cproute_job.sh`. The script performs the following steps:
+
+1. Creates (or reuses) an isolated Python virtual environment.
+2. Installs the task requirements together with the `huggingface_hub` package.
+3. Downloads the `pickup_yt_0614_dataset_change` splits via
+   `scripts/download_pickup_dataset.py` (set `SKIP_DATA_DOWNLOAD=1` to reuse
+   existing files).
+4. Executes `run.py` with arguments configured to enable tropical attention in
+   CPRoute.
+
+You can customize common options via environment variables before calling
+`sbatch`, for example:
+
+```bash
+export NUM_EPOCH=40
+export HF_TOKEN="<your huggingface token>"
+sbatch scripts/tropical_cproute_job.sh
+```
+
+The dataset download script accepts additional parameters (repository id,
+prefix, or archive filename) through the batch script variables, allowing you to
+adapt the workflow to mirrored storage or alternative dataset locations.
 
 
 ## Citing

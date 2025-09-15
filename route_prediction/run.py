@@ -1,87 +1,180 @@
 # -*- coding: utf-8 -*-
-import os
+import json
 from pprint import pprint
-from utils.util import get_common_params, dict_merge
+
+from utils.util import dict_merge, get_common_params
+
 
 def run(params):
     pprint(params)
-    model = params['model']
-    # for route prediction task
-      if model in ['Distance-Greedy', 'Time-Greedy', 'Or-Tools']:
+    model = params["model"]
+
+    if model in ["Distance-Greedy", "Time-Greedy", "Or-Tools"]:
         from algorithm.basic.basic_model import main
-        main(params)
-    if model == 'fdnet':
+    elif model == "fdnet":
         from algorithm.fdnet.train import main
-        main(params)
-    if model ==  'deeproute':
+    elif model == "deeproute":
         from algorithm.deeproute.train import main
-        main(params)
-    if model == 'osqure':
+    elif model == "osqure":
         from algorithm.osqure.train import main
-        main(params)
-    if model == 'graph2route':
+    elif model == "graph2route":
         from algorithm.graph2route.train import main
-        main(params)
-    if model == 'cproute':
+    elif model == "cproute":
         from algorithm.cproute.train import main
-        main(params)
-    if model == 'm2g4rtp_pickup':
+    elif model == "m2g4rtp_pickup":
         from algorithm.m2g4rtp_pickup.train import main
-        main(params)
-    if model == 'drl4route':
+    elif model == "drl4route":
         from algorithm.drl4route.train import main
-        main(params)
+    else:
+        raise ValueError(f"Unsupported model: {model}")
+
+    main(params)
+
+
 def get_params():
     parser = get_common_params()
+    parser.add_argument(
+        "--model",
+        type=str,
+        default=None,
+        help=(
+            "Name of the model to run. When omitted, run.py executes its default "
+            "benchmark sweep."
+        ),
+    )
+    parser.add_argument(
+        "--datasets",
+        nargs="+",
+        default=None,
+        help="Optional list of dataset identifiers to evaluate. Overrides --dataset.",
+    )
+    parser.add_argument(
+        "--use_tropical_attention",
+        action="store_true",
+        help="Use the tropical multi-head attention inside CPRoute.",
+    )
+    parser.add_argument(
+        "--tropical_attention_kwargs",
+        type=str,
+        default=None,
+        help=(
+            "JSON-encoded dictionary with additional keyword arguments passed to "
+            "the tropical attention module."
+        ),
+    )
+    parser.add_argument(
+        "--cuda_id",
+        type=int,
+        default=0,
+        help="CUDA device identifier used by compatible algorithms.",
+    )
     args, _ = parser.parse_known_args()
     return args
 
-if __name__ == "__main__":
-    params = vars(get_params())
-    params['cuda_id'] = 0
-    params['is_test'] = True
-    datasets = ['pickup_yt_0614_dataset_change'] # the name of datasets
+
+def _parse_tropical_kwargs(params):
+    raw_kwargs = params.get("tropical_attention_kwargs")
+    if not raw_kwargs:
+        params.pop("tropical_attention_kwargs", None)
+        return
+    if isinstance(raw_kwargs, dict):
+        return
+    try:
+        params["tropical_attention_kwargs"] = json.loads(raw_kwargs)
+    except json.JSONDecodeError as exc:
+        raise ValueError(
+            "--tropical_attention_kwargs must be a valid JSON object."
+        ) from exc
+
+
+def _build_default_experiments(base_params, dataset_overrides=None):
+    datasets = dataset_overrides or ["pickup_yt_0614_dataset_change"]
     args_lst = []
-    for model in ['Distance-Greedy', 'Time-Greedy',  'osqure', 'deeproute', 'fdnet',  'graph2route' ]:
-        if model in ['Distance-Greedy', 'Time-Greedy', 'Or-Tools']:
+    for model in [
+        "Distance-Greedy",
+        "Time-Greedy",
+        "Or-Tools",
+        "osqure",
+        "deeproute",
+        "fdnet",
+        "graph2route",
+        "cproute",
+        "m2g4rtp_pickup",
+        "drl4route",
+    ]:
+        if model in ["Distance-Greedy", "Time-Greedy", "Or-Tools"]:
             for dataset in datasets:
-                basic_params = dict_merge([params, {'model': model,'dataset': dataset}])
+                basic_params = dict_merge([base_params, {"model": model, "dataset": dataset}])
                 args_lst.append(basic_params)
-
-        if model in ['osqure']:
+        elif model == "osqure":
             for dataset in datasets:
-                osqure_params = {'model': model, 'dataset': dataset}
-                osqure_params = dict_merge([params, osqure_params])
+                osqure_params = dict_merge(
+                    [base_params, {"model": model, "dataset": dataset}]
+                )
                 args_lst.append(osqure_params)
-
-        if model in ['drl4route']:
+        elif model == "drl4route":
             for hs in [64, 32]:
                 for rl_r in [0.2, 0.4, 0.6, 0.8, 1]:
                     for dataset in datasets:
-                        dl_params = {'model': model, 'hidden_size': hs, 'dataset': dataset,  'rl_ratio':rl_r}
-                        dl_params = dict_merge([params, dl_params])
+                        dl_params = dict_merge(
+                            [
+                                base_params,
+                                {
+                                    "model": model,
+                                    "hidden_size": hs,
+                                    "dataset": dataset,
+                                    "rl_ratio": rl_r,
+                                },
+                            ]
+                        )
                         args_lst.append(dl_params)
-
-        if model in ['deeproute',  'fdnet', 'cproute', 'm2g4rtp',  'm2g4rtp_pickup']:
+        elif model in ["deeproute", "fdnet", "cproute", "m2g4rtp_pickup"]:
             for hs in [32, 64]:
                 for dataset in datasets:
-                    deeproute_params = {'model': model, 'hidden_size': hs, 'dataset': dataset}
-                    deeproute_params = dict_merge([params, deeproute_params])
+                    deeproute_params = dict_merge(
+                        [
+                            base_params,
+                            {"model": model, "hidden_size": hs, "dataset": dataset},
+                        ]
+                    )
                     args_lst.append(deeproute_params)
-
-        if model in ['graph2route']:
+        elif model == "graph2route":
             for hs in [32, 64]:
                 for gcn_num_layers in [2, 3]:
                     for dataset in datasets:
-                        for knn in ['n-1', 'n']:
-                            graph2route_params = {'model': model, 'hidden_size': hs, 'gcn_num_layers': gcn_num_layers,
-                                                  'worker_emb_dim': 20, 'dataset': dataset, 'k_nearest_neighbors': knn}
-                            graph2route_params = dict_merge([params, graph2route_params])
+                        for knn in ["n-1", "n"]:
+                            graph2route_params = dict_merge(
+                                [
+                                    base_params,
+                                    {
+                                        "model": model,
+                                        "hidden_size": hs,
+                                        "gcn_num_layers": gcn_num_layers,
+                                        "worker_emb_dim": 20,
+                                        "dataset": dataset,
+                                        "k_nearest_neighbors": knn,
+                                    },
+                                ]
+                            )
                             args_lst.append(graph2route_params)
+    return args_lst
 
-    # note: here you can use parallel running to accelerate the experiment.
-    for p in args_lst:
-        run(p)
+
+if __name__ == "__main__":
+    params = vars(get_params())
+    _parse_tropical_kwargs(params)
+
+    dataset_overrides = params.pop("datasets", None)
+
+    if params.get("model"):
+        dataset_names = dataset_overrides or [params.get("dataset")]
+        for dataset in dataset_names:
+            single_run_params = dict_merge([params, {"dataset": dataset}])
+            run(single_run_params)
+    else:
+        args_lst = _build_default_experiments(params, dataset_overrides)
+        for p in args_lst:
+            run(p)
 
 
 
