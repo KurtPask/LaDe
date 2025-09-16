@@ -1,18 +1,24 @@
 #!/bin/bash
 #SBATCH --job-name=tropical_cproute
+#SBATCH --partition=dsag
 #SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=1
 #SBATCH --mem=32G
 #SBATCH --time=24:00:00
 #SBATCH --output=%x_%j.out
 #SBATCH --error=%x_%j.err
 
+. /etc/profile
+module load lang/python/3.13.0
+
 set -euo pipefail
 
 export PYTHONUNBUFFERED=1
 
-SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+SCRIPT_DIR=$HOME/LaDe/LaDe/route_prediction/scripts  #$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+echo $SCRIPT_DIR
 PROJECT_ROOT=${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}
+echo $PROJECT_ROOT
 ROUTE_PRED_DIR="$PROJECT_ROOT/route_prediction"
 LOG_DIR=${LOG_DIR:-"$ROUTE_PRED_DIR/logs"}
 VENV_DIR=${VENV_DIR:-"$PROJECT_ROOT/.venvs/tropical_cproute"}

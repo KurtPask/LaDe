@@ -1,0 +1,4 @@
+*.venvs*
+*.err*
+*.out*
+*modules_available*
