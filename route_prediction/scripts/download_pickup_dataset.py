@@ -41,6 +41,7 @@ def _download_file(
     filename: str,
     output_dir: Path,
     token: str | None,
+    repo_type: str,
 ) -> Path:
     """Download ``filename`` from ``repo_id`` and return the local file path."""
 
@@ -49,8 +50,8 @@ def _download_file(
         repo_id=repo_id,
         filename=filename,
         local_dir=output_dir,
-        local_dir_use_symlinks=False,
         token=token,
+        repo_type=repo_type,
     )
     return Path(downloaded)
 
@@ -85,6 +86,12 @@ def main() -> None:
         "--repo-prefix",
         default="route_prediction/dataset",
         help="Repository sub-directory that stores the dataset artifacts.",
+    )
+    parser.add_argument(
+        "--repo-type",
+        default="dataset",
+        choices=("model", "dataset", "space"),
+        help="Hugging Face repository type that hosts the dataset artifacts.",
     )
     parser.add_argument(
         "--dataset",
@@ -131,7 +138,13 @@ def main() -> None:
             continue
         print(f"[download] Fetching {remote_file} from {args.repo_id}...")
         try:
-            _download_file(args.repo_id, remote_file, output_dir, args.token)
+            _download_file(
+                args.repo_id,
+                remote_file,
+                output_dir,
+                args.token,
+                args.repo_type,
+            )
         except HfHubHTTPError as err:
             print(
                 f"[download] Unable to fetch split '{split}' directly ({err}). "
@@ -148,7 +161,13 @@ def main() -> None:
     for archive in archive_paths:
         print(f"[download] Attempting archive download: {archive}")
         try:
-            archive_path = _download_file(args.repo_id, archive, output_dir, args.token)
+            archive_path = _download_file(
+                args.repo_id,
+                archive,
+                output_dir,
+                args.token,
+                args.repo_type,
+            )
         except HfHubHTTPError as err:
             print(f"[download] Archive {archive} unavailable ({err}).")
             continue

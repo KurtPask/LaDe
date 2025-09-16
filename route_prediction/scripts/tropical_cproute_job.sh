@@ -26,6 +26,7 @@ PYTHON_BIN=${PYTHON_BIN:-python3}
 DATASET_NAME=${DATASET_NAME:-pickup_yt_0614_dataset_change}
 HF_REPO_ID=${HF_REPO_ID:-Cainiao-AI/LaDe-P}
 HF_REPO_PREFIX=${HF_REPO_PREFIX:-route_prediction/dataset}
+HF_REPO_TYPE=${HF_REPO_TYPE:-dataset}
 BATCH_SIZE=${BATCH_SIZE:-64}
 NUM_EPOCH=${NUM_EPOCH:-30}
 HIDDEN_SIZE=${HIDDEN_SIZE:-128}
@@ -61,7 +62,8 @@ if [[ "${SKIP_DATA_DOWNLOAD:-0}" != "1" ]]; then
         --dataset "$DATASET_NAME" \
         --output-dir "$DATASET_DIR" \
         --repo-id "$HF_REPO_ID" \
-        --repo-prefix "$HF_REPO_PREFIX"
+        --repo-prefix "$HF_REPO_PREFIX" \
+        --repo-type "$HF_REPO_TYPE"
 else
     echo "[$(date)] Skipping dataset download as requested."
 fi

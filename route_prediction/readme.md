@@ -40,9 +40,9 @@ at `scripts/tropical_cproute_job.sh`. The script performs the following steps:
 
 1. Creates (or reuses) an isolated Python virtual environment.
 2. Installs the task requirements together with the `huggingface_hub` package.
-3. Downloads the `pickup_yt_0614_dataset_change` splits via
-   `scripts/download_pickup_dataset.py` (set `SKIP_DATA_DOWNLOAD=1` to reuse
-   existing files).
+3. Downloads the `pickup_yt_0614_dataset_change` splits from the Hugging Face
+   dataset repository via `scripts/download_pickup_dataset.py --repo-type
+   dataset` (set `SKIP_DATA_DOWNLOAD=1` to reuse existing files).
 4. Executes `run.py` with arguments configured to enable tropical attention in
    CPRoute.
 
@@ -52,8 +52,13 @@ You can customize common options via environment variables before calling
 ```bash
 export NUM_EPOCH=40
 export HF_TOKEN="<your huggingface token>"
+export HF_REPO_TYPE=dataset  # optional, defaults to "dataset"
 sbatch scripts/tropical_cproute_job.sh
 ```
+
+> **Note:** Accept the usage conditions of the `Cainiao-AI/LaDe-P` dataset on
+> Hugging Face and provide a valid `HF_TOKEN` before running the download
+> script; otherwise the hub will respond with authentication errors.
 
 The dataset download script accepts additional parameters (repository id,
 prefix, or archive filename) through the batch script variables, allowing you to
