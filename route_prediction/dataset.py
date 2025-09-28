@@ -6,7 +6,7 @@ import numpy as np
 from geopy.distance import geodesic
 from tqdm import tqdm
 from utils.util import ws, dir_check
-from data.preprocess import pre_process, split_trajectory, list2str
+from preprocess import pre_process, split_trajectory, list2str
 import argparse
 import copy
 

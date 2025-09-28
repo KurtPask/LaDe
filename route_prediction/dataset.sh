@@ -3,7 +3,7 @@
 #SBATCH --partition=dsag
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=32G
+#SBATCH --mem=128G
 #SBATCH --time=24:00:00
 #SBATCH --output=%x_%j.out
 #SBATCH --error=%x_%j.err
@@ -16,9 +16,9 @@ source "$HOME/LaDe/LaDe/.venvs/tropical_cproute/bin/activate"
 set -euo pipefail
 shopt -s nullglob
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$SCRIPT_DIR"
-DATA_SCRIPT="$PROJECT_ROOT/data/dataset.py"
+# SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$HOME/LaDe/LaDe/route_prediction"
+DATA_SCRIPT="$PROJECT_ROOT/dataset.py"
 RAW_ROOT="$PROJECT_ROOT/data/raw"
 TMP_ROOT="$PROJECT_ROOT/data/tmp"
 

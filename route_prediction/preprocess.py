@@ -412,8 +412,8 @@ def pre_process(fin, fout, is_test=False, thread_num = 20):
 
     if fout != '':
         dir_check(fout)
-        df.to_csv(fout+'package_feature.csv', index=False)
-        cou_df.to_csv(fout+'courier_feature.csv', index=False)
+        df.to_csv(fout+'/package_feature.csv', index=False)
+        cou_df.to_csv(fout+'/courier_feature.csv', index=False)
         make_aoi_dict(fout)
     print('Data preprocessing is done...')
 

@@ -2,3 +2,6 @@
 *.err*
 *.out*
 *modules_available*
+*.npy
+*.csv
+*.pyc
