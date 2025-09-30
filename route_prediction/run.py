@@ -88,19 +88,20 @@ def _parse_tropical_kwargs(params):
 
 
 def _build_default_experiments(base_params, dataset_overrides=None):
-    datasets = dataset_overrides or ["pickup_yt_0614_dataset_change"]
+    splits = ['jl', 'cq', 'yt', 'sh', 'hz']
+    datasets = dataset_overrides or [f"pickup_{i}" for i in splits]
     args_lst = []
     for model in [
-        "Distance-Greedy",
-        "Time-Greedy",
-        "Or-Tools",
-        "osqure",
-        "deeproute",
-        "fdnet",
-        "graph2route",
+        #"Distance-Greedy",
+        #"Time-Greedy",
+        #"Or-Tools",
+        #"osqure",
+        #"deeproute",
+        #"fdnet",
+        #"graph2route",
         "cproute",
-        "m2g4rtp_pickup",
-        "drl4route",
+        #"m2g4rtp_pickup",
+        #"drl4route",
     ]:
         if model in ["Distance-Greedy", "Time-Greedy", "Or-Tools"]:
             for dataset in datasets:

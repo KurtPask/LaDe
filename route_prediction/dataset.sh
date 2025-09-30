@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH --job-name=tropical_cproute
+#SBATCH --job-name=dataset
 #SBATCH --partition=dsag
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=128G
 #SBATCH --time=24:00:00
-#SBATCH --output=%x_%j.out
-#SBATCH --error=%x_%j.err
+#SBATCH --output=logs/runtime/%x_%j.out
+#SBATCH --error=logs/runtime/%x_%j.err
 
 . /etc/profile
 module load lang/python/3.13.0

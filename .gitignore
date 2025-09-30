@@ -5,3 +5,4 @@
 *.npy
 *.csv
 *.pyc
+*hidden_size*
